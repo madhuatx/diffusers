@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -1131,6 +1132,10 @@ class StableDiffusionXLPipeline(
 
         device = self._execution_device
 
+        # MADHU: timestamp when prompt encoder started
+        time.sleep(5)
+        logger.warn(f"{time.time_ns()}: ###################### Prompt encoder started")
+
         # 3. Encode input prompt
         lora_scale = (
             self.cross_attention_kwargs.get("scale", None) if self.cross_attention_kwargs is not None else None
@@ -1156,6 +1161,11 @@ class StableDiffusionXLPipeline(
             lora_scale=lora_scale,
             clip_skip=self.clip_skip,
         )
+
+        # MADHU: timestamp when prompt encoder completed
+        logger.warn(f"{time.time_ns()}: ###################### Prompt encoder completed")
+        # MADHU: Sleep, so we can see stage in profiler
+        time.sleep(2)
 
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
@@ -1257,6 +1267,10 @@ class StableDiffusionXLPipeline(
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None or ip_adapter_image_embeds is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
+
+                # MADHU: timestamp when UNet starts
+                logger.warn(f"{time.time_ns()}: ###################### UNet step {i} started")
+        
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
@@ -1278,6 +1292,11 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+
+                # MADHU: timestamp when UNet step is completed
+                logger.warn(f"{time.time_ns()}: ###################### UNet step {i} completed")
+                # MADHU: Sleep, so we can see stage in profiler
+                time.sleep(2)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1313,7 +1332,15 @@ class StableDiffusionXLPipeline(
                 self.upcast_vae()
                 latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
 
+            # MADHU: timestamp when VAE started
+            logger.warn(f"{time.time_ns()}: ###################### VAE decoder started")
+
             image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
+
+            # MADHU: timestamp when VAE decoder completed
+            logger.warn(f"{time.time_ns()}: ###################### VAE decoder completed")
+            # MADHU: Sleep, so we can see stage in profiler
+            time.sleep(5)
 
             # cast back to fp16 if needed
             if needs_upcasting:
