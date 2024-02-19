@@ -1133,7 +1133,7 @@ class StableDiffusionXLPipeline(
         device = self._execution_device
 
         # MADHU: timestamp when prompt encoder started
-        time.sleep(5)
+        time.sleep(2)
         logger.warn(f"{time.time_ns()}: ###################### Prompt encoder started")
 
         # 3. Encode input prompt
@@ -1165,7 +1165,7 @@ class StableDiffusionXLPipeline(
         # MADHU: timestamp when prompt encoder completed
         logger.warn(f"{time.time_ns()}: ###################### Prompt encoder completed")
         # MADHU: Sleep, so we can see stage in profiler
-        time.sleep(2)
+        time.sleep(1)
 
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
@@ -1296,7 +1296,7 @@ class StableDiffusionXLPipeline(
                 # MADHU: timestamp when UNet step is completed
                 logger.warn(f"{time.time_ns()}: ###################### UNet step {i} completed")
                 # MADHU: Sleep, so we can see stage in profiler
-                time.sleep(2)
+                time.sleep(1)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1340,7 +1340,7 @@ class StableDiffusionXLPipeline(
             # MADHU: timestamp when VAE decoder completed
             logger.warn(f"{time.time_ns()}: ###################### VAE decoder completed")
             # MADHU: Sleep, so we can see stage in profiler
-            time.sleep(5)
+            time.sleep(2)
 
             # cast back to fp16 if needed
             if needs_upcasting:
