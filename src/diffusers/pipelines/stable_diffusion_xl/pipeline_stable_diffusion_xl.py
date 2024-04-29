@@ -1185,6 +1185,17 @@ class StableDiffusionXLPipeline(
                 # MADHU: timestamp when UNet starts
                 start_t = time.time_ns()
                 logger.info(f"{start_t}: ###################### UNet step {i} started")
+                # # MADHU: print out tensor sizes for inputs
+                # logger.info(f"latent_model_input = {latent_model_input.size()}")
+                # logger.info(f"encoder_hidden_states = {prompt_embeds.size()}")
+                # logger.info(f"timestep_cond = {None if not timestep_cond else timestep_cond.size()}")
+                # logger.info(f"cross_attention_kwargs = {None if not cross_attention_kwargs else cross_attention_kwargs.size()}")
+                # logger.info(f"added_cond_kwargs = {added_cond_kwargs}")
+                # text_embeds_shape = added_cond_kwargs.get("text_embeds").size()
+                # logger.info(f"added_cond_kwargs.text_embeds = {text_embeds_shape}")
+                # time_ids_shape = added_cond_kwargs.get("time_ids").size()
+                # logger.info(f"added_cond_kwargs.time_ids = {time_ids_shape}")
+                
         
                 noise_pred = self.unet(
                     latent_model_input,
@@ -1264,6 +1275,9 @@ class StableDiffusionXLPipeline(
             start_t = time.time_ns()
             logger.info(f"{time.time_ns()}: ###################### VAE decoder started")
 
+            # MADHU: print out tensor sizes for inputs
+            logger.info(f"latents = {latents.size()}")
+ 
             image = self.vae.decode(latents, return_dict=False)[0]
 
             # MADHU: timestamp when VAE decoder completed

@@ -696,6 +696,8 @@ class StableDiffusionXLImg2ImgPipeline(
                 ]
                 init_latents = torch.cat(init_latents, dim=0)
             else:
+                #MADHU probing for image shape
+                logger.info(f"Image Size input to VAE encoder = {image.size()}")
                 init_latents = retrieve_latents(self.vae.encode(image), generator=generator)
 
             if self.vae.config.force_upcast:
