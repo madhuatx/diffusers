@@ -1248,7 +1248,8 @@ class StableDiffusionXLPipeline(
                         latents = latents.to(latents_dtype)
 
                 # MADHU: timestamp when UNet step is completed
-                logger.info(f"{time.time_ns()}: ###################### UNet step {i} completed in {(time.time_ns()-start_t)/1000000.0}ms")
+                end_t = time.time_ns()
+                logger.info(f"{end_t}: ###################### UNet step {i} completed in {(end_t-start_t)/1000000.0}ms")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}

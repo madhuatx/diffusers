@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import inspect
 from typing import Callable, Dict, List, Optional, Union
 
@@ -907,6 +908,13 @@ class StableDiffusion3Img2ImgPipeline(DiffusionPipeline):
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latent_model_input.shape[0])
 
+                # MADHU: timestamp when the DiT starts
+                start_t = time.time_ns()
+                logger.info(f"{start_t}: ###################### DiT step {i} started")
+                logger.info(f"hidden_states = {latent_model_input.size()}")
+                logger.info(f"encoder_hidden_states = {prompt_embeds.size()}")
+                logger.info(f"pooled_projections = {pooled_prompt_embeds.size()}")
+
                 noise_pred = self.transformer(
                     hidden_states=latent_model_input,
                     timestep=timestep,
@@ -928,6 +936,10 @@ class StableDiffusion3Img2ImgPipeline(DiffusionPipeline):
                     if torch.backends.mps.is_available():
                         # some platforms (eg. apple mps) misbehave due to a pytorch bug: https://github.com/pytorch/pytorch/pull/99272
                         latents = latents.to(latents_dtype)
+
+                # MADHU: timestamp when DiT step is completed
+                end_t = time.time_ns()
+                logger.info(f"{end_t}: ###################### DiT step {i} completed in {(end_t-start_t)/1000000.0}ms")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -955,7 +967,18 @@ class StableDiffusion3Img2ImgPipeline(DiffusionPipeline):
         else:
             latents = (latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
 
+            # MADHU: timestamp when VAE started
+            start_t = time.time_ns()
+            logger.info(f"{time.time_ns()}: ###################### VAE decoder started")
+            # MADHU: print out tensor sizes for inputs
+            logger.info(f"latents = {latents.size()}")
+
             image = self.vae.decode(latents, return_dict=False)[0]
+
+            # MADHU: timestamp when VAE decoder completed
+            end_t = time.time_ns()
+            logger.info(f"{end_t}: ###################### VAE decoder completed in {(end_t-start_t)/1000000.0}ms")
+
             image = self.image_processor.postprocess(image, output_type=output_type)
 
         # Offload all models
