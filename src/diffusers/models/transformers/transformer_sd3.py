@@ -15,6 +15,7 @@
 
 from typing import Any, Dict, List, Optional, Union
 
+import time
 import torch
 import torch.nn as nn
 
@@ -332,9 +333,19 @@ class SD3Transformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
                 )
 
             else:
+                # MADHU: timestamp when the block of DiT starts
+                start_t = time.time_ns()
+                logger.info(f"{start_t}: ###################### MMDiT Block {index_block} started")
+                logger.info(f"hidden_states = {hidden_states.size()}")
+                logger.info(f"encoder_hidden_states = {encoder_hidden_states.size()}")
+                logger.info(f"temb = {temb.size()}")
+
                 encoder_hidden_states, hidden_states = block(
                     hidden_states=hidden_states, encoder_hidden_states=encoder_hidden_states, temb=temb
                 )
+                # MADHU: timestamp when DiT block is completed
+                end_t = time.time_ns()
+                logger.info(f"{end_t}: ###################### MMDiT Block {index_block} completed in {(end_t-start_t)/1000000.0}ms")
 
             # controlnet residual
             if block_controlnet_hidden_states is not None and block.context_pre_only is False:
