@@ -486,6 +486,7 @@ class Attention(nn.Module):
                 f"cross_attention_kwargs {unused_kwargs} are not expected by {self.processor.__class__.__name__} and will be ignored."
             )
         cross_attention_kwargs = {k: w for k, w in cross_attention_kwargs.items() if k in attn_parameters}
+        logger.info(f"Before calling attention processor {type(self.processor)} hidden_states = {hidden_states.size()}")
 
         return self.processor(
             self,
@@ -1060,20 +1061,31 @@ class JointAttnProcessor2_0:
 
         batch_size = encoder_hidden_states.shape[0]
 
+        logger.info(f"Inside attention processor hidden_states = {hidden_states.size()}")
+        logger.info(f"attn = {type(attn)}")
+
         # `sample` projections.
         query = attn.to_q(hidden_states)
         key = attn.to_k(hidden_states)
         value = attn.to_v(hidden_states)
+
+        logger.info(f"query = {query.size()}, key = {key.size()}, value = {value.size()}")
 
         # `context` projections.
         encoder_hidden_states_query_proj = attn.add_q_proj(encoder_hidden_states)
         encoder_hidden_states_key_proj = attn.add_k_proj(encoder_hidden_states)
         encoder_hidden_states_value_proj = attn.add_v_proj(encoder_hidden_states)
 
+        logger.info(f"encoder_hidden_states_query_proj = {encoder_hidden_states_query_proj.size()}, "
+                    f"encoder_hidden_states_key_proj = {encoder_hidden_states_key_proj.size()}, "
+                    f"encoder_hidden_states_value_proj = {encoder_hidden_states_value_proj.size()}")
+
         # attention
         query = torch.cat([query, encoder_hidden_states_query_proj], dim=1)
         key = torch.cat([key, encoder_hidden_states_key_proj], dim=1)
         value = torch.cat([value, encoder_hidden_states_value_proj], dim=1)
+
+        logger.info(f"after adding encoder states: query = {query.size()}, key = {key.size()}, value = {value.size()}")
 
         inner_dim = key.shape[-1]
         head_dim = inner_dim // attn.heads
@@ -1081,10 +1093,13 @@ class JointAttnProcessor2_0:
         key = key.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
         value = value.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
 
+        logger.info(f"view: query = {query.size()}, key = {key.size()}, value = {value.size()}")
+
         hidden_states = F.scaled_dot_product_attention(query, key, value, dropout_p=0.0, is_causal=False)
         hidden_states = hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
         hidden_states = hidden_states.to(query.dtype)
 
+        logger.info(f"view: hidden_states = {hidden_states.size()}")
         # Split the attention outputs.
         hidden_states, encoder_hidden_states = (
             hidden_states[:, : residual.shape[1]],
@@ -1102,6 +1117,8 @@ class JointAttnProcessor2_0:
             hidden_states = hidden_states.transpose(-1, -2).reshape(batch_size, channel, height, width)
         if context_input_ndim == 4:
             encoder_hidden_states = encoder_hidden_states.transpose(-1, -2).reshape(batch_size, channel, height, width)
+
+        logger.info(f"return: hidden_states = {hidden_states.size()}")
 
         return hidden_states, encoder_hidden_states
 
@@ -1454,7 +1471,7 @@ class FusedJointAttnProcessor2_0:
             encoder_hidden_states = encoder_hidden_states.view(batch_size, channel, height * width).transpose(1, 2)
 
         batch_size = encoder_hidden_states.shape[0]
-
+        logger.info(f"Inside attention processor hidden_states = {hidden_states.size()}")
         # `sample` projections.
         qkv = attn.to_qkv(hidden_states)
         split_size = qkv.shape[-1] // 3

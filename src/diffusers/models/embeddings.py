@@ -23,6 +23,9 @@ from ..utils import deprecate
 from .activations import FP32SiLU, get_activation
 from .attention_processor import Attention
 
+from ..utils import logging
+logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
+
 
 def get_timestep_embedding(
     timesteps: torch.Tensor,
@@ -200,6 +203,8 @@ class PatchEmbed(nn.Module):
         super().__init__()
 
         num_patches = (height // patch_size) * (width // patch_size)
+        logger.info(f"height = {height}, width = {width}, patch_size = {patch_size}, "
+                    f"num_patches = {num_patches}")
         self.flatten = flatten
         self.layer_norm = layer_norm
         self.pos_embed_max_size = pos_embed_max_size
@@ -263,13 +268,18 @@ class PatchEmbed(nn.Module):
         else:
             height, width = latent.shape[-2] // self.patch_size, latent.shape[-1] // self.patch_size
 
+        logger.info(f"Size of latent before projection = {latent.size()}")
         latent = self.proj(latent)
+        logger.info(f"Size of latent after projection = {latent.size()}")
         if self.flatten:
             latent = latent.flatten(2).transpose(1, 2)  # BCHW -> BNC
         if self.layer_norm:
             latent = self.norm(latent)
         if self.pos_embed is None:
             return latent.to(latent.dtype)
+
+        logger.info(f"Size of latent after flatten = {latent.size()}")
+
         # Interpolate or crop positional embeddings as needed
         if self.pos_embed_max_size:
             pos_embed = self.cropped_pos_embed(height, width)

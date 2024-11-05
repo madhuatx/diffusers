@@ -168,10 +168,13 @@ class JointTransformerBlock(nn.Module):
                 encoder_hidden_states, emb=temb
             )
 
+        logger.info(f"norm_hidden_states = {norm_hidden_states.size()}")
         # Attention.
         attn_output, context_attn_output = self.attn(
             hidden_states=norm_hidden_states, encoder_hidden_states=norm_encoder_hidden_states
         )
+
+        logger.info(f"attn_output = {attn_output.size()}, context_attn_output = {context_attn_output.size()}")
 
         # Process attention outputs for the `hidden_states`.
         attn_output = gate_msa.unsqueeze(1) * attn_output
@@ -179,6 +182,8 @@ class JointTransformerBlock(nn.Module):
 
         norm_hidden_states = self.norm2(hidden_states)
         norm_hidden_states = norm_hidden_states * (1 + scale_mlp[:, None]) + shift_mlp[:, None]
+        logger.info(f"After attention processing norm_hidden_states = {norm_hidden_states.size()}")
+
         if self._chunk_size is not None:
             # "feed_forward_chunk_size" can be used to save memory
             ff_output = _chunked_feed_forward(self.ff, norm_hidden_states, self._chunk_dim, self._chunk_size)
@@ -187,6 +192,8 @@ class JointTransformerBlock(nn.Module):
         ff_output = gate_mlp.unsqueeze(1) * ff_output
 
         hidden_states = hidden_states + ff_output
+
+        logger.info(f"After attention processing hidden_states = {hidden_states.size()}")
 
         # Process attention outputs for the `encoder_hidden_states`.
         if self.context_pre_only:
