@@ -729,6 +729,18 @@ class FluxPipeline(
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
 
+                # MADHU: timestamp when the DiT starts
+                start_t = time.time_ns()
+                logger.info(f"{start_t}: ###################### DiT step {i} started")
+                logger.info(f"hidden_states = {latents.size()}")
+                logger.info(f"timestep = {timestep/1000}")
+                logger.info(f"guidance = {guidance.size()}")
+                logger.info(f"pooled_projections = {pooled_prompt_embeds.size()}")
+                logger.info(f"encoder_hidden_states = {prompt_embeds.size()}")
+                logger.info(f"txt_ids = {text_ids.size()}")
+                logger.info(f"img_ids = {latent_image_ids.size()}")
+                logger.info(f"joint_attention_kwargs = {None if not joint_attention_kwargs else self.joint_attention_kwargs.size()}")
+                
                 noise_pred = self.transformer(
                     hidden_states=latents,
                     timestep=timestep / 1000,
