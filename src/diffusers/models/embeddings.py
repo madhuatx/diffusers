@@ -761,6 +761,7 @@ def apply_rotary_emb(
         Tuple[torch.Tensor, torch.Tensor]: Tuple of modified query tensor and key tensor with rotary embeddings.
     """
     if use_real:
+        logger.info(f"ERROR: {freqs_cis[1].size()}")
         cos, sin = freqs_cis  # [S, D]
         cos = cos[None, None]
         sin = sin[None, None]

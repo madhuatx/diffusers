@@ -503,13 +503,14 @@ class FluxTransformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrig
                 )
 
             else:
-                # MADHU: timestamp when the block of DiT starts
+                # MADHU: timestamp when the block of FluxTransformerBlock starts
                 start_t = time.time_ns()
                 logger.info(f"{start_t}: ###################### FluxTransformerBlock {index_block} started")
                 logger.info(f"hidden_states = {hidden_states.size()}")
                 logger.info(f"encoder_hidden_states = {encoder_hidden_states.size()}")
                 logger.info(f"temb = {temb.size()}")
-                logger.info(f"image_rotary_emb = {image_rotary_emb[0].size()}")
+                logger.info(f"length of image_rotary_emb = {len(image_rotary_emb)}")
+                logger.info(f"image_rotary_emb = {[x.size() for x in image_rotary_emb]}")
                 logger.info(f"joint_attention_kwargs = {None if not joint_attention_kwargs else self.joint_attention_kwargs.size()}")
 
                 encoder_hidden_states, hidden_states = block(
@@ -567,7 +568,8 @@ class FluxTransformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrig
                 logger.info(f"{start_t}: ###################### FluxSingleTransformerBlock {index_block} started")
                 logger.info(f"hidden_states = {hidden_states.size()}")
                 logger.info(f"temb = {temb.size()}")
-                logger.info(f"image_rotary_emb = {image_rotary_emb[0].size()}")
+                logger.info(f"length of image_rotary_emb = {len(image_rotary_emb)}")
+                logger.info(f"image_rotary_emb = {[x.size() for x in image_rotary_emb]}")
                 logger.info(f"joint_attention_kwargs = {None if not joint_attention_kwargs else self.joint_attention_kwargs.size()}")
           
                 hidden_states = block(
