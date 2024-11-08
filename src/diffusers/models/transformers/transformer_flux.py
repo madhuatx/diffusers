@@ -15,6 +15,7 @@
 
 from typing import Any, Dict, Optional, Tuple, Union
 
+import time
 import numpy as np
 import torch
 import torch.nn as nn
@@ -502,6 +503,15 @@ class FluxTransformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrig
                 )
 
             else:
+                # MADHU: timestamp when the block of DiT starts
+                start_t = time.time_ns()
+                logger.info(f"{start_t}: ###################### FluxTransformerBlock {index_block} started")
+                logger.info(f"hidden_states = {hidden_states.size()}")
+                logger.info(f"encoder_hidden_states = {encoder_hidden_states.size()}")
+                logger.info(f"temb = {temb.size()}")
+                logger.info(f"image_rotary_emb = {image_rotary_emb[0].size()}")
+                logger.info(f"joint_attention_kwargs = {None if not joint_attention_kwargs else self.joint_attention_kwargs.size()}")
+
                 encoder_hidden_states, hidden_states = block(
                     hidden_states=hidden_states,
                     encoder_hidden_states=encoder_hidden_states,
@@ -509,6 +519,11 @@ class FluxTransformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrig
                     image_rotary_emb=image_rotary_emb,
                     joint_attention_kwargs=joint_attention_kwargs,
                 )
+
+                # MADHU: timestamp when DiT block is completed
+                end_t = time.time_ns()
+                logger.info(f"{end_t}: ###################### FluxTransformerBlock Block {index_block} completed in {(end_t-start_t)/1000000.0}ms")
+
 
             # controlnet residual
             if controlnet_block_samples is not None:
@@ -546,12 +561,26 @@ class FluxTransformer2DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrig
                 )
 
             else:
+
+                # MADHU: timestamp when the block of DiT starts
+                start_t = time.time_ns()
+                logger.info(f"{start_t}: ###################### FluxSingleTransformerBlock {index_block} started")
+                logger.info(f"hidden_states = {hidden_states.size()}")
+                logger.info(f"temb = {temb.size()}")
+                logger.info(f"image_rotary_emb = {image_rotary_emb[0].size()}")
+                logger.info(f"joint_attention_kwargs = {None if not joint_attention_kwargs else self.joint_attention_kwargs.size()}")
+          
                 hidden_states = block(
                     hidden_states=hidden_states,
                     temb=temb,
                     image_rotary_emb=image_rotary_emb,
                     joint_attention_kwargs=joint_attention_kwargs,
                 )
+
+                # MADHU: timestamp when DiT block is completed
+                end_t = time.time_ns()
+                logger.info(f"{end_t}: ###################### FluxSingleTransformerBlock {index_block} completed in {(end_t-start_t)/1000000.0}ms")
+
 
             # controlnet residual
             if controlnet_single_block_samples is not None:

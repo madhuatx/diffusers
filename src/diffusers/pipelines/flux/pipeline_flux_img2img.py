@@ -544,6 +544,8 @@ class FluxImg2ImgPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             return latents.to(device=device, dtype=dtype), latent_image_ids
 
         image = image.to(device=device, dtype=dtype)
+        # MADHU Determine input size to VAE
+        logger.info("f VAE Input size image = {image.size()}")
         image_latents = self._encode_vae_image(image=image, generator=generator)
         if batch_size > image_latents.shape[0] and batch_size % image_latents.shape[0] == 0:
             # expand init_latents for batch_size

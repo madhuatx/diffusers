@@ -16,6 +16,7 @@ import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
+import time
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 
@@ -734,7 +735,7 @@ class FluxPipeline(
                 logger.info(f"{start_t}: ###################### DiT step {i} started")
                 logger.info(f"hidden_states = {latents.size()}")
                 logger.info(f"timestep = {timestep/1000}")
-                logger.info(f"guidance = {guidance.size()}")
+                logger.info(f"guidance = {None if not guidance else guidance.size()}")
                 logger.info(f"pooled_projections = {pooled_prompt_embeds.size()}")
                 logger.info(f"encoder_hidden_states = {prompt_embeds.size()}")
                 logger.info(f"txt_ids = {text_ids.size()}")
@@ -784,7 +785,18 @@ class FluxPipeline(
         else:
             latents = self._unpack_latents(latents, height, width, self.vae_scale_factor)
             latents = (latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
+            # MADHU: timestamp when VAE started
+            start_t = time.time_ns()
+            logger.info(f"{time.time_ns()}: ###################### VAE decoder started")
+            # MADHU: print out tensor sizes for inputs
+            logger.info(f"VAE decoder latents = {latents.size()}")
+
             image = self.vae.decode(latents, return_dict=False)[0]
+
+            # MADHU: timestamp when VAE decoder completed
+            end_t = time.time_ns()
+            logger.info(f"{end_t}: ###################### VAE decoder completed in {(end_t-start_t)/1000000.0}ms")
+
             image = self.image_processor.postprocess(image, output_type=output_type)
 
         # Offload all models
