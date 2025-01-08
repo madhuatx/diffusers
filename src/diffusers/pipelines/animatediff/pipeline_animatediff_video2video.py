@@ -243,7 +243,7 @@ class AnimateDiffVideoToVideoPipeline(
             feature_extractor=feature_extractor,
             image_encoder=image_encoder,
         )
-        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1)
+        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1) if getattr(self, "vae", None) else 8
         self.video_processor = VideoProcessor(vae_scale_factor=self.vae_scale_factor)
 
     def encode_prompt(
@@ -662,12 +662,6 @@ class AnimateDiffVideoToVideoPipeline(
                 self.vae.to(dtype=torch.float32)
 
             if isinstance(generator, list):
-                if len(generator) != batch_size:
-                    raise ValueError(
-                        f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"
-                        f" size of {batch_size}. Make sure the batch size matches the length of the generators."
-                    )
-
                 init_latents = [
                     self.encode_video(video[i], generator[i], decode_chunk_size).unsqueeze(0)
                     for i in range(batch_size)

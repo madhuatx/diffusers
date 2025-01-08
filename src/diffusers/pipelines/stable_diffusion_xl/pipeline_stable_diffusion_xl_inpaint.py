@@ -285,11 +285,8 @@ class StableDiffusionXLInpaintPipeline(
     _callback_tensor_inputs = [
         "latents",
         "prompt_embeds",
-        "negative_prompt_embeds",
         "add_text_embeds",
         "add_time_ids",
-        "negative_pooled_prompt_embeds",
-        "add_neg_time_ids",
         "mask",
         "masked_image_latents",
     ]
@@ -324,7 +321,7 @@ class StableDiffusionXLInpaintPipeline(
         )
         self.register_to_config(force_zeros_for_empty_prompt=force_zeros_for_empty_prompt)
         self.register_to_config(requires_aesthetics_score=requires_aesthetics_score)
-        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1)
+        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1) if getattr(self, "vae", None) else 8
         self.image_processor = VaeImageProcessor(vae_scale_factor=self.vae_scale_factor)
         self.mask_processor = VaeImageProcessor(
             vae_scale_factor=self.vae_scale_factor, do_normalize=False, do_binarize=True, do_convert_grayscale=True
@@ -1671,13 +1668,8 @@ class StableDiffusionXLInpaintPipeline(
 
                     latents = callback_outputs.pop("latents", latents)
                     prompt_embeds = callback_outputs.pop("prompt_embeds", prompt_embeds)
-                    negative_prompt_embeds = callback_outputs.pop("negative_prompt_embeds", negative_prompt_embeds)
                     add_text_embeds = callback_outputs.pop("add_text_embeds", add_text_embeds)
-                    negative_pooled_prompt_embeds = callback_outputs.pop(
-                        "negative_pooled_prompt_embeds", negative_pooled_prompt_embeds
-                    )
                     add_time_ids = callback_outputs.pop("add_time_ids", add_time_ids)
-                    add_neg_time_ids = callback_outputs.pop("add_neg_time_ids", add_neg_time_ids)
                     mask = callback_outputs.pop("mask", mask)
                     masked_image_latents = callback_outputs.pop("masked_image_latents", masked_image_latents)
 

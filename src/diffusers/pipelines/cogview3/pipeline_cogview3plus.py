@@ -38,7 +38,7 @@ EXAMPLE_DOC_STRING = """
         >>> import torch
         >>> from diffusers import CogView3PlusPipeline
 
-        >>> pipe = CogView3PlusPipeline.from_pretrained("THUDM/CogView3Plus-3B", torch_dtype=torch.bfloat16)
+        >>> pipe = CogView3PlusPipeline.from_pretrained("THUDM/CogView3-Plus-3B", torch_dtype=torch.bfloat16)
         >>> pipe.to("cuda")
 
         >>> prompt = "A photo of an astronaut riding a horse on mars"
@@ -153,9 +153,7 @@ class CogView3PlusPipeline(DiffusionPipeline):
         self.register_modules(
             tokenizer=tokenizer, text_encoder=text_encoder, vae=vae, transformer=transformer, scheduler=scheduler
         )
-        self.vae_scale_factor = (
-            2 ** (len(self.vae.config.block_out_channels) - 1) if hasattr(self, "vae") and self.vae is not None else 8
-        )
+        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1) if getattr(self, "vae", None) else 8
 
         self.image_processor = VaeImageProcessor(vae_scale_factor=self.vae_scale_factor)
 
