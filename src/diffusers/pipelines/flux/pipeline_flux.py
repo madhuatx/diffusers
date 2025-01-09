@@ -889,7 +889,7 @@ class FluxPipeline(
                 start_t = time.time_ns()
                 logger.info(f"{start_t}: ###################### DiT step {i} started")
                 logger.info(f"hidden_states = {latents.size()}")
-                logger.info(f"timestep = {timestep/1000}")
+                logger.info(f"timestep = {timestep}")
                 logger.info(f"guidance = {None if not guidance else guidance.size()}")
                 logger.info(f"pooled_projections = {pooled_prompt_embeds.size()}")
                 logger.info(f"encoder_hidden_states = {prompt_embeds.size()}")
