@@ -958,12 +958,14 @@ class FluxPipeline(
             latents = (latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
             # MADHU: timestamp when VAE started
             start_t = time.time_ns()
+            logger.info(f"min, max of latents: {torch.min(latents)}. {torch.max(latents)}")
             logger.info(f"{time.time_ns()}: ###################### VAE decoder started")
             # MADHU: print out tensor sizes for inputs
             logger.info(f"VAE decoder latents = {latents.size()}")
 
             image = self.vae.decode(latents, return_dict=False)[0]
 
+            logger.info(f"min, max of image: {torch.min(image)}. {torch.max(image)}")
             # MADHU: timestamp when VAE decoder completed
             end_t = time.time_ns()
             logger.info(f"{end_t}: ###################### VAE decoder completed in {(end_t-start_t)/1000000.0}ms")
