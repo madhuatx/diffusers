@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 .PHONY: deps_table_update modified_only_fixup extra_style_checks quality style fixup fix-copies test test-examples
 
 # make sure to test the local checkout in scripts and not the pre-installed one (don't use quotes!)
@@ -94,3 +96,11 @@ post-release:
 
 post-patch:
 	python utils/release.py --post_release --patch
+
+venv:
+	@python3 -m venv ./venv
+	source venv/bin/activate; \
+	pip install --no-input --upgrade pip; \
+	pip install -e ".[dev]" ; \
+	./setenv.sh
+	@echo "activate your environment with source venv/bin/activate"
